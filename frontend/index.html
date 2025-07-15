@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="index.css">
+
+</head>
+
+<body>
+    <h1>Weather App</h1>
+    <!-- Create a form to take user input for city and country -->
+    <form id="weatherForm">
+        <input type="text" id="city" placeholder="Enter city name" required autocomplete="off" />
+        <div id="autocomplete-list" class="autocomplete-items"></div> <!-- Empty div for suggestions -->
+        <input type="text" id="country" placeholder="Enter country code" required autocomplete="off" />
+        <button type="submit">Get Weather</button>
+    </form>
+
+    <!-- Create a section to display the weather data -->
+    <div id="weatherDisplay"></div>
+
+    <!-- section to display 16-day weather forecast -->
+    <div id="forecastDisplay"></div>
+
+    <!-- section to display weather search history -->
+
+
+    <script src="fIndex.js"></script> <!-- Link your frontend script -->
+</body>
+
+</html>
