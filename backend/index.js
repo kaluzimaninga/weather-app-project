@@ -10,25 +10,27 @@ dotenv.config(); // Loads the .env file content into process.env.
 const app = express();
 const PORT = process.env.PORT || 3000; // this is the port we are using
 const apiKey = process.env.WEATHER_API_KEY; // referencing the API key in the .env file
+console.log("Loaded API Key:", apiKey);
+
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend'))); // Adjusting path since backend is in a different folder
 
-// Current Weather Route
+/// Current Weather Route
 app.get('/current-weather', async (req, res) => {
-    const { city, country } = req.query; // gets country and city from request query parameters
+    const { city, country } = req.query;
     try {
         const response = await axios.get(`https://api.weatherbit.io/v2.0/current`, {
             params: {
                 city,
                 country,
-                key: apiKey // literally the API key
+                key: apiKey
             }
         });
-        res.json(response.data); // Sends the weather data back as a JSON response
+        res.json(response.data);
     } catch (error) {
-        console.error(error); // Log error for debugging.
-        res.status(500).send('Error fetching weather data'); // Sends error response.
+        console.error('Error fetching weather data:', error.message || error);
+        res.status(500).send('Error fetching weather data');
     }
 });
 

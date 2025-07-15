@@ -1,88 +1,89 @@
 const form = document.getElementById('weatherForm');
 const weatherDisplay = document.getElementById('weatherDisplay');
-const cityInput = document.getElementById('city'); // Get the city input field
+const forecastDisplay = document.getElementById('forecastDisplay');
+const cityInput = document.getElementById('city');
 
+// Handle form submission
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+//
+  const city = cityInput.value.trim();
+  const country = document.getElementById('country').value.trim();// Get country input value
 
-  const city = document.getElementById('city').value;
-  const country = document.getElementById('country').value;
+  if (!city || !country) { // Check if both city and country are provided
+    weatherDisplay.innerHTML = '<p>Please enter both city and country.</p>';
+    return;
+  }
 
-  // await fetchWeather(city, country); // Your current weather fetch function
-  //await fetchForecast(city, country); // Fetch the forecast
-
+  // Fetch current weather
   try {
-    const response = await fetch(`http://localhost:3000/current-weather?city=${city}&country=${country}`);
+    const response = await fetch(`http://localhost:3000/current-weather?city=${city}&country=${country}`); // Fetch current weather data from the backend
     const data = await response.json();
 
-    const weather = data.data && data.data.length > 0 ? data.data[0] : {};
-    console.log(data); // Check the structure of the returned data in the console
+    const weather = data.data && data.data.length > 0 ? data.data[0] : null;
 
-    // Make sure the data structure is correct before accessing properties
-    // if (data && data.weather && data.weather.description) {
-    weatherDisplay.innerHTML = `
-        <p>City: ${weather.city_name || 'Unknown'}, ${weather.country_code || 'Unknown'}</p>
-        <p>Temperature: ${weather.app_temp}°C</p>
-        <p>Feels like: ${weather.app_temp}°C</p>
-        <p>Weather: ${weather.weather ? weather.weather.description : 'Unknown'}</p>
-        <p>Humidity: ${weather.rh}%</p>
-        <p>Wind Speed: ${weather.wind_spd} m/s</p>
-        <p>Air Quality Index: ${weather.aqi}</p>
-        <p>Timestamp: ${weather.ob_time || 'Unknown'}</p>
+    // Display current weather data
+    if (weather) {
+      weatherDisplay.innerHTML = `
+        <p><strong>City:</strong> ${weather.city_name || 'Unknown'}, ${weather.country_code || 'Unknown'}</p>
+        <p><strong>Temperature:</strong> ${weather.temp}°C</p>
+        <p><strong>Feels Like:</strong> ${weather.app_temp}°C</p>
+        <p><strong>Weather:</strong> ${weather.weather?.description || 'Unknown'}</p>
+        <p><strong>Humidity:</strong> ${weather.rh}%</p>
+        <p><strong>Wind Speed:</strong> ${weather.wind_spd} m/s</p>
+        <p><strong>Air Quality Index:</strong> ${weather.aqi}</p>
+        <p><strong>Timestamp:</strong> ${weather.datetime || 'Unknown'}</p>
       `;
-    // } else {
-    // weatherDisplay.innerHTML = `<p>Weather data unavailable for the entered location.</p>`;
-    // }
+    } else {
+      weatherDisplay.innerHTML = `<p>Weather data unavailable for "${city}, ${country}".</p>`;
+    }
 
-    // Save search history in localStorage
+// Save search history
     saveSearchHistory(city);
-
   } catch (error) {
     console.error('Error fetching weather data:', error);
     weatherDisplay.innerHTML = `<p>Failed to retrieve weather data. Please try again later.</p>`;
   }
 
-  ////fetching the 16-day forecast and logging it in the console
+  // Fetchin 16-day forecast
   try {
     const forecastResponse = await fetch(`http://localhost:3000/forecast?city=${city}&country=${country}`);
-    const forecastData = await forecastResponse.json();
+    const forecastData = await forecastResponse.json(); // Fetch forecast data from the backend
 
-
-    console.log('16-day Forecast Data:', forecastData); // Log 16-day forecast data in the console
-
-    // Display 16-day forecast (for now, just logging it; you can display it later)
     forecastDisplay.innerHTML = ''; // Clear previous forecast
-    forecastData.data.forEach(day => {
-      forecastDisplay.innerHTML += `
-         <div>
-           <p>Date: ${day.valid_date}</p>
-           <p>Max Temp: ${day.max_temp}°C</p>
-           <p>Min Temp: ${day.min_temp}°C</p>
-           <p>Weather: ${day.weather ? day.weather.description : 'Unknown'}</p>
-         </div>
-         <hr>
-       `;
-    });
 
-  }
-  catch (error) {
+    // Display forecast data
+    if (forecastData.data && forecastData.data.length > 0) {
+      forecastData.data.forEach(day => {
+        forecastDisplay.innerHTML += `
+          <div class="forecast-day">
+            <p><strong>Date:</strong> ${day.valid_date}</p>
+            <p><strong>Max Temp:</strong> ${day.max_temp}°C</p>
+            <p><strong>Min Temp:</strong> ${day.min_temp}°C</p>
+            <p><strong>Weather:</strong> ${day.weather?.description || 'Unknown'}</p>
+          </div>
+          <hr>
+        `;
+      });
+    } else {
+      forecastDisplay.innerHTML = `<p>No forecast data available.</p>`;
+    }
+  } catch (error) {
     console.error('Error fetching forecast:', error);
     forecastDisplay.innerHTML = `<p>Failed to retrieve forecast data. Please try again later.</p>`;
   }
-
 });
 
-// Function to save city search history in localStorage
+// Save search history in localStorage
 function saveSearchHistory(city) {
   let searchHistory = JSON.parse(localStorage.getItem('weatherSearchHistory')) || [];
-
   if (!searchHistory.includes(city)) {
-    searchHistory.push(city); // Add the new city to the list
-    localStorage.setItem('weatherSearchHistory', JSON.stringify(searchHistory)); // Save back to localStorage
+    searchHistory.push(city);
+    localStorage.setItem('weatherSearchHistory', JSON.stringify(searchHistory));
   }
 }
 
-// Function to suggest history as autocomplete options
+// Autocomplete suggestions
 cityInput.addEventListener('input', () => {
   const searchHistory = JSON.parse(localStorage.getItem('weatherSearchHistory')) || [];
   const inputVal = cityInput.value.toLowerCase();
@@ -91,23 +92,20 @@ cityInput.addEventListener('input', () => {
   showAutocompleteSuggestions(suggestions);
 });
 
-// Function to display autocomplete suggestions in a dropdown
+// Show autocomplete suggestions
 function showAutocompleteSuggestions(suggestions) {
   const suggestionBox = document.getElementById('autocomplete-list');
-  suggestionBox.innerHTML = ''; // Clear previous suggestions
+  suggestionBox.innerHTML = '';
 
   suggestions.forEach(suggestion => {
     const option = document.createElement('div');
     option.classList.add('autocomplete-item');
     option.innerText = suggestion;
-
-    // When a user clicks a suggestion, it fills the input box
     option.addEventListener('click', () => {
       cityInput.value = suggestion;
-      suggestionBox.innerHTML = ''; // Clear suggestions after selection
+      suggestionBox.innerHTML = '';
     });
 
-
-    suggestionBox.appendChild(option); // Add each suggestion to the dropdown
+    suggestionBox.appendChild(option);
   });
 }
